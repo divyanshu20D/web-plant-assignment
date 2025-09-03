@@ -44,12 +44,12 @@ export default function NavBar() {
         </Link>
 
         <nav className="flex items-center gap-2">
-          <Link
+          {/* <Link
             href="/projects"
             className="text-sm text-slate-600 hover:text-slate-900"
           >
             Projects
-          </Link>
+          </Link> */}
           {user ? (
             <>
               <span className="text-sm text-slate-500 hidden sm:inline">
