@@ -32,14 +32,8 @@ const projectsSlice = createSlice({
   name: "projects",
   initialState,
   reducers: {
-    setProjects: (state, action: PayloadAction<any[]>) => {
-      // Convert API response to match our Project type
-      state.projects = action.payload.map((p: any) => ({
-        id: p._id || p.id,
-        title: p.title,
-        description: p.description,
-        tasks: [], // Tasks will be loaded separately
-      }));
+    setProjects: (state, action: PayloadAction<Project[]>) => {
+      state.projects = action.payload;
     },
     setProjectWithTasks: (
       state,

@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import type { Project } from "@/lib/types"
-import { Pencil, Trash } from "lucide-react"
-import ConfirmationDialog from "@/components/confirmation-dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import type { Project } from "@/lib/types";
+import { Pencil, Trash } from "lucide-react";
+import ConfirmationDialog from "@/components/confirmation-dialog";
 
 type Props = {
-  project: Project
-  onEdit: () => void
-  onDelete: () => void
-}
+  project: Project;
+  onEdit: () => void;
+  onDelete: () => void;
+};
 
 export default function ProjectCard({ project, onEdit, onDelete }: Props) {
-  const todo = project.tasks.filter((t) => t.status === "todo").length
-  const doing = project.tasks.filter((t) => t.status === "in-progress").length
-  const done = project.tasks.filter((t) => t.status === "done").length
+  const todo = project.tasks.filter((t) => t.status === "todo").length;
+  const doing = project.tasks.filter((t) => t.status === "in-progress").length;
+  const done = project.tasks.filter((t) => t.status === "done").length;
 
   return (
     <Card className="h-full">
@@ -25,7 +25,12 @@ export default function ProjectCard({ project, onEdit, onDelete }: Props) {
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-pretty">{project.title}</CardTitle>
           <div className="flex items-center gap-1">
-            <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Edit project">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onEdit}
+              aria-label="Edit project"
+            >
               <Pencil className="h-4 w-4" />
             </Button>
             <ConfirmationDialog
@@ -51,13 +56,17 @@ export default function ProjectCard({ project, onEdit, onDelete }: Props) {
         )}
         <div className="flex items-center gap-2">
           <Badge variant="secondary">Todo {todo}</Badge>
-          <Badge className="bg-blue-600 text-white hover:bg-blue-600">Doing {doing}</Badge>
-          <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">Done {done}</Badge>
+          <Badge className="bg-blue-600 text-white hover:bg-blue-600">
+            Doing {doing}
+          </Badge>
+          <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">
+            Done {done}
+          </Badge>
         </div>
         <Link href={`/projects/${project.id}`}>
           <Button className="w-full">Open</Button>
         </Link>
       </CardContent>
     </Card>
-  )
+  );
 }

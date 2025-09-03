@@ -1,85 +1,117 @@
-"use client"
+"use client";
 
-import { useDispatch, useSelector } from "react-redux"
-import type { RootState } from "@/store"
-import { setProjects, deleteProject } from "@/store/slices/projects-slice"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useMemo, useState, useEffect } from "react"
-import NavBar from "@/components/nav-bar"
-import ProjectCard from "@/components/project-card"
-import ProjectDialog from "@/components/project-dialog"
-import { Plus } from "lucide-react"
-import { projectApi, ApiError } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
-import { useDebounce } from "@/hooks/use-debounce"
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/store";
+import { setProjects, deleteProject } from "@/store/slices/projects-slice";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useMemo, useState, useEffect } from "react";
+import NavBar from "@/components/nav-bar";
+import ProjectCard from "@/components/project-card";
+import ProjectDialog from "@/components/project-dialog";
+import { Plus } from "lucide-react";
+import { projectApi, ApiError, taskApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export default function ProjectsPage() {
-  const { projects } = useSelector((s: RootState) => s.projects)
-  const user = useSelector((s: RootState) => s.auth.user)
-  const dispatch = useDispatch()
-  const router = useRouter()
-  const { toast } = useToast()
-  const [q, setQ] = useState("")
-  const [loading, setLoading] = useState(true)
-  const debouncedQuery = useDebounce(q, 300) // 300ms debounce delay
+  const { projects } = useSelector((s: RootState) => s.projects);
+  const user = useSelector((s: RootState) => s.auth.user);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(true);
+  const debouncedQuery = useDebounce(q, 300); // 300ms debounce delay
 
   // Load projects from API
   const loadProjects = async () => {
     try {
-      const response = await projectApi.getAll()
-      dispatch(setProjects(response.projects))
+      const response = await projectApi.getAll();
+      // For each project, fetch tasks to compute counts
+      const projectsWithTasks = await Promise.all(
+        response.projects.map(async (p: any) => {
+          try {
+            const { tasks } = await taskApi.getByProject(p._id || p.id);
+            return {
+              id: p._id || p.id,
+              title: p.title,
+              description: p.description,
+              tasks: tasks.map((t: any) => ({
+                id: t._id || t.id,
+                title: t.title,
+                description: t.description,
+                status: t.status,
+                dueDate: t.dueDate,
+              })),
+            };
+          } catch {
+            // If tasks fetch fails, still return project without tasks
+            return {
+              id: p._id || p.id,
+              title: p.title,
+              description: p.description,
+              tasks: [],
+            };
+          }
+        })
+      );
+      dispatch(setProjects(projectsWithTasks));
     } catch (error) {
-      console.error('Load projects error:', error)
+      console.error("Load projects error:", error);
 
       if (error instanceof ApiError && error.status === 401) {
         toast({
           title: "Error",
           description: "Please login to continue",
           variant: "destructive",
-        })
-        router.push('/login')
-        return
+        });
+        router.push("/login");
+        return;
       }
 
       toast({
         title: "Error",
         description: "Failed to load projects",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadProjects()
-  }, [])
+    loadProjects();
+  }, []);
 
   const handleDeleteProject = async (id: string) => {
     try {
-      await projectApi.delete(id)
-      dispatch(deleteProject({ id }))
+      await projectApi.delete(id);
+      dispatch(deleteProject({ id }));
       toast({
         title: "Success",
         description: "Project deleted successfully",
-      })
+      });
     } catch (error) {
-      console.error('Delete project error:', error)
+      console.error("Delete project error:", error);
       toast({
         title: "Error",
         description: "Failed to delete project",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const filtered = useMemo(() => {
-    const t = debouncedQuery.trim().toLowerCase()
-    if (!t) return projects
-    return projects.filter((p) => p.title.toLowerCase().includes(t) || (p.description ?? "").toLowerCase().includes(t))
-  }, [projects, debouncedQuery])
+    const t = debouncedQuery.trim().toLowerCase();
+    if (!t) return projects;
+    return projects.filter(
+      (p) =>
+        p.title.toLowerCase().includes(t) ||
+        (p.description ?? "").toLowerCase().includes(t)
+    );
+  }, [projects, debouncedQuery]);
 
   return (
     <main>
@@ -131,7 +163,11 @@ export default function ProjectsPage() {
                   project={p}
                   onEdit={() =>
                     // open dialog with defaults
-                    (document.getElementById(`edit-${p.id}`) as HTMLButtonElement)?.click()
+                    (
+                      document.getElementById(
+                        `edit-${p.id}`
+                      ) as HTMLButtonElement
+                    )?.click()
                   }
                   onDelete={() => handleDeleteProject(p.id)}
                 />
@@ -141,7 +177,9 @@ export default function ProjectsPage() {
             {filtered.length === 0 && !loading && (
               <div className="text-center py-8">
                 <p className="text-gray-500">
-                  {debouncedQuery ? "No projects found matching your search." : "No projects yet. Create your first project!"}
+                  {debouncedQuery
+                    ? "No projects found matching your search."
+                    : "No projects yet. Create your first project!"}
                 </p>
               </div>
             )}
@@ -151,7 +189,11 @@ export default function ProjectsPage() {
               <ProjectDialog
                 key={p.id}
                 trigger={<button id={`edit-${p.id}`} className="hidden" />}
-                defaultValues={{ title: p.title, description: p.description, id: p.id }}
+                defaultValues={{
+                  title: p.title,
+                  description: p.description,
+                  id: p.id,
+                }}
                 onSuccess={loadProjects}
               />
             ))}
@@ -159,5 +201,5 @@ export default function ProjectsPage() {
         )}
       </section>
     </main>
-  )
+  );
 }

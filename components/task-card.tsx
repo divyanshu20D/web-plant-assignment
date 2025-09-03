@@ -118,14 +118,16 @@ export default function TaskCard({ task, onEdit, onDelete, onMove }: Props) {
               ? `Due: ${new Date(task.dueDate).toLocaleDateString()}`
               : "No due date"}
           </span>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleMove}
-            disabled={loadingMove}
-          >
-            {loadingMove ? "Moving..." : `Move to ${next}`}
-          </Button>
+          {task.status !== "done" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleMove}
+              disabled={loadingMove}
+            >
+              {loadingMove ? "Moving..." : `Move to ${next}`}
+            </Button>
+          )}
         </div>
       </CardContent>
 
