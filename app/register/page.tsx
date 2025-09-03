@@ -11,17 +11,75 @@ import { Input } from "@/components/ui/input"
 import NavBar from "@/components/nav-bar"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { authApi, setAuthToken, ApiError } from "@/lib/api"
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
   const dispatch = useDispatch()
   const router = useRouter()
+  const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    dispatch(register({ email }))
-    router.push("/projects")
+
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await authApi.register(email, password)
+
+      // Store the JWT token
+      setAuthToken(response.token)
+
+      // Update Redux state
+      dispatch(register({
+        email: response.user.email,
+        id: response.user.id
+      }))
+
+      toast({
+        title: "Success",
+        description: "Account created successfully",
+      })
+
+      router.push("/projects")
+    } catch (error) {
+      console.error('Registration error:', error)
+
+      let errorMessage = "Registration failed"
+
+      if (error instanceof ApiError) {
+        errorMessage = error.message
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -48,8 +106,8 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <Button type="submit" className="w-full">
-                Register
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Creating account..." : "Register"}
               </Button>
             </form>
             <p className="text-sm text-slate-600 mt-3">

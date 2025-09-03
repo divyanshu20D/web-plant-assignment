@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import type { Project } from "@/lib/types"
 import { Pencil, Trash } from "lucide-react"
+import ConfirmationDialog from "@/components/confirmation-dialog"
 
 type Props = {
   project: Project
@@ -21,19 +22,28 @@ export default function ProjectCard({ project, onEdit, onDelete }: Props) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-pretty">{project.title}</CardTitle>
           <div className="flex items-center gap-1">
             <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Edit project">
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button size="icon" variant="ghost" onClick={onDelete} aria-label="Delete project">
-              <Trash className="h-4 w-4 text-red-500" />
-            </Button>
+            <ConfirmationDialog
+              trigger={
+                <Button size="icon" variant="ghost" aria-label="Delete project">
+                  <Trash className="h-4 w-4 text-red-500" />
+                </Button>
+              }
+              title="Delete Project"
+              description={`Are you sure you want to delete "${project.title}"? This action cannot be undone and will also delete all tasks in this project.`}
+              confirmText="Delete"
+              onConfirm={onDelete}
+              variant="destructive"
+            />
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-4 pb-2">
         {project.description ? (
           <p className="text-sm text-slate-600">{project.description}</p>
         ) : (

@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "Web plant assignment",
+  description: "Created by Divyanshu",
+  generator: "Divyanshu",
 }
 
 export default function RootLayout({
